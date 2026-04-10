@@ -9,13 +9,16 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60 * 24
 
-    travel_buddy_api_url: str = "https://travel-buddy.ai/api"
     hugging_face_api_key: str = ""
     hugging_face_model: str = "mistralai/Mistral-7B-Instruct-v0.2"
     rapidapi_key: str = ""
 
+    resend_api_key: str = ""
+    frontend_url: str = "http://localhost:3000"
+
     class Config:
         env_file = ".env"
+        case_sensitive=False
 
 
 settings = Settings()
