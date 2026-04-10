@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import auth, visa, chatbot, history, map
+from routers import auth, visa, chatbot, history, map, chat
 
 app = FastAPI(
     title="MyVisaAssistant API",
@@ -22,6 +22,7 @@ app.include_router(visa.router,    prefix="/visa",    tags=["Visa"])
 app.include_router(chatbot.router, prefix="/chatbot", tags=["Chatbot"])
 app.include_router(history.router, prefix="/history", tags=["History"])
 app.include_router(map.router,     prefix="/map",     tags=["Map"])
+app.include_router(chat.router, prefix="/chat", tags=["Chat"])
 
 
 @app.get("/")
