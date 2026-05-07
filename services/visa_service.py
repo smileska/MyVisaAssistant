@@ -69,4 +69,11 @@ async def fetch_map_colors(passport_code: str) -> dict:
         response.raise_for_status()
         result = response.json()["data"]
 
-    return result.get("colors", {})
+    raw_colors = result.get("colors", {})
+    mapped_colors = {}
+
+    for color, countries in raw_colors.items():
+        for country_code in countries.split(","):
+            mapped_colors[country_code.strip().upper()] = color
+
+    return mapped_colors

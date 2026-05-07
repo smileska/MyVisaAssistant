@@ -1,8 +1,8 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps'
 import { Map, Loader, AlertCircle, ZoomIn, ZoomOut } from 'lucide-react'
 import { mapApi } from '../api/client'
-import { COUNTRIES, ISO2_TO_NUMERIC, getMapFillColor } from '../data/countries'
+import { COUNTRIES, getMapFillColor } from '../data/countries'
 import CountrySelect from '../components/CountrySelect'
 
 const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
@@ -23,22 +23,13 @@ export default function MapPage() {
   const [tooltip, setTooltip] = useState(null)
   const [zoom, setZoom] = useState(1)
 
-  // Build numeric-code → fill-color lookup
-  const colorMap = useMemo(() => {
-    if (!colors) return {}
-    const map = {}
-    for (const [iso2, colorName] of Object.entries(colors)) {
-      const numeric = ISO2_TO_NUMERIC[iso2.toUpperCase()]
-      if (numeric) map[numeric] = getMapFillColor(colorName)
-    }
-    return map
-  }, [colors])
-
   const handleSearch = async () => {
     if (!passport) return
+
     setError('')
     setLoading(true)
     setColors(null)
+
     try {
       const res = await mapApi.getColors(passport)
       setColors(res.data.colors || {})
@@ -63,7 +54,6 @@ export default function MapPage() {
           </p>
         </div>
 
-        {/* Controls */}
         <div className="card mb-6">
           <div className="flex flex-col sm:flex-row gap-4 items-end">
             <div className="flex-1">
@@ -86,7 +76,6 @@ export default function MapPage() {
           </div>
         )}
 
-        {/* Map */}
         <div className="card p-0 overflow-hidden">
           <div className="bg-navy-900 p-4 flex items-center justify-between">
             <h2 className="text-white font-semibold text-sm">
@@ -103,16 +92,29 @@ export default function MapPage() {
           </div>
 
           <div className="bg-[#d4e6f1] relative" style={{ height: '500px' }}>
-            <ComposableMap
-              projectionConfig={{ scale: 147 }}
-              style={{ width: '100%', height: '100%' }}
-            >
+            <ComposableMap projectionConfig={{ scale: 147 }} style={{ width: '100%', height: '100%' }}>
               <ZoomableGroup zoom={zoom}>
                 <Geographies geography={GEO_URL}>
                   {({ geographies }) =>
                     geographies.map((geo) => {
-                      const numId = String(geo.id).padStart(3, '0')
-                      const fill = colorMap[numId] || (colors ? '#d1d5db' : '#9fb3c8')
+                      const countryName = geo.properties?.name
+
+const country = COUNTRIES.find(
+  (c) =>
+    c.label === countryName ||
+    (countryName === 'United States of America' && c.value === 'US') ||
+    (countryName === 'Russian Federation' && c.value === 'RU') ||
+    (countryName === 'Korea, Republic of' && c.value === 'KR') ||
+    (countryName === "Korea, Democratic People's Republic of" && c.value === 'KP')
+)
+
+const iso2 = country?.value
+
+                      const fill =
+                        iso2 && colors?.[iso2]
+                          ? getMapFillColor(colors[iso2])
+                          : colors ? '#d1d5db' : '#9fb3c8'
+
                       return (
                         <Geography
                           key={geo.rsmKey}
@@ -125,9 +127,7 @@ export default function MapPage() {
                             hover: { fill: '#1d4ed8', outline: 'none' },
                             pressed: { outline: 'none' },
                           }}
-                          onMouseEnter={() => {
-                            setTooltip(geo.properties?.name || 'Unknown')
-                          }}
+                          onMouseEnter={() => setTooltip(countryName || 'Unknown')}
                           onMouseLeave={() => setTooltip(null)}
                         />
                       )
@@ -150,7 +150,6 @@ export default function MapPage() {
             )}
           </div>
 
-          {/* Legend */}
           <div className="p-4 border-t border-gray-100">
             <div className="flex flex-wrap gap-4 justify-center">
               {LEGEND.map((l) => (
