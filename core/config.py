@@ -16,6 +16,10 @@ class Settings(BaseSettings):
     resend_api_key: str = ""
     frontend_url: str = "http://localhost:3000"
 
+    email_user: str
+    email_app_password: str
+    frontend_url: str
+
     class Config:
         env_file = ".env"
         case_sensitive=False
