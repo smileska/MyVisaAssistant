@@ -150,55 +150,60 @@ async def generate_personalized_reply(
     )
 
     system_prompt = f"""
-You are MyVisaAssistant, an AI travel visa assistant.
+You are MyVisaAssistant.
 
-Your job is to help users understand visa requirements clearly and accurately.
+You help users understand travel visa requirements.
 
-Rules:
+IMPORTANT RULES:
 - Always answer in {response_language}
-- Be concise but helpful
+- Do NOT use markdown
+- Do NOT use #, *, **, or bullet markdown
+- Use clean plain text only
+- Keep answers concise and readable
+- Do not repeat unnecessary technical information
+- Do not list raw API fields
+- Explain things naturally like a real assistant
 - Never invent information
-- Use ONLY the provided visa information
-- Explain things in simple language
-- Mention stay duration if available
-- Mention required registration if available
-- Mention embassy URL if available
-- Be friendly and professional
+- Only use provided visa information
+
+RESPONSE STYLE:
+- Use short paragraphs
+- Use emojis sparingly if helpful
+- Make the response easy for normal users to understand
+- Mention only the most important information
 """
 
-    visa_context = f"""
-USER QUESTION:
+    user_prompt = f"""
+User question:
 {user_message}
 
-TRAVEL INFORMATION:
+Visa information:
 
-Citizenship: {intent.citizenship}
+Destination country:
+{destination.name}
 
-Destination:
-- Name: {destination.name}
-- Code: {destination.code}
-- Capital: {destination.capital}
-- Continent: {destination.continent}
+Visa status:
+{visa_rule.name}
 
-VISA RULE:
-- Name: {visa_rule.name}
-- Duration: {visa_rule.duration}
-- Category: {visa_rule.color}
-- Link: {visa_rule.link}
+Allowed stay duration:
+{visa_rule.duration}
 
-ADDITIONAL INFO:
-- Passport validity: {destination.passport_validity}
-- Embassy URL: {destination.embassy_url}
+Passport validity requirement:
+{destination.passport_validity}
 
-MANDATORY REGISTRATION:
-- {mandatory.name if mandatory else "None"}
+Embassy website:
+{destination.embassy_url}
 
-TRAVEL PURPOSE:
-- {intent.purpose}
+Mandatory registration:
+{mandatory.name if mandatory else "None"}
+
+Travel purpose:
+{intent.purpose}
 """
 
     try:
-        completion = client.chat.completions.create(
+
+        response = client.chat.completions.create(
             model=settings.hugging_face_model,
             messages=[
                 {
@@ -207,18 +212,30 @@ TRAVEL PURPOSE:
                 },
                 {
                     "role": "user",
-                    "content": visa_context,
+                    "content": user_prompt,
                 },
             ],
-            max_tokens=350,
-            temperature=0.4,
+            max_tokens=250,
+            temperature=0.3,
         )
 
-        return completion.choices[0].message.content.strip()
+        reply = response.choices[0].message.content.strip()
+
+        # cleanup
+        reply = (
+            reply
+            .replace("###", "")
+            .replace("##", "")
+            .replace("**", "")
+            .replace("*", "")
+        )
+
+        return reply.strip()
 
     except Exception as e:
-        raise RuntimeError(f"Failed to generate personalized reply: {str(e)}")
-
+        raise RuntimeError(
+            f"Failed to generate personalized reply: {str(e)}"
+        )
 
 
 async def chat(
