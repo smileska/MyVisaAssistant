@@ -42,6 +42,7 @@ If you didn't create an account, you can ignore this email.
         subtype="html",
     )
 
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+    with smtplib.SMTP("smtp.gmail.com", 587) as server:
+        server.starttls()
         server.login(settings.email_user, settings.email_app_password)
         server.send_message(msg)
