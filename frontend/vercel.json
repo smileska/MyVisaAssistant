@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://myvisaassistant-backend.onrender.com/$1"
+    }
+  ]
+}
